@@ -1,8 +1,14 @@
-﻿//  功能：搭建本地web服务，自动生成二维码，便于手机站测试
+﻿//  webserver-node v-0.0.2
+//  功能：搭建本地web服务，自动生成二维码，便于手机站测试
 //  require:安装node.js(官网地址：http://www.nodejs.org/)
 //  启动服务命令：
-//  node start.js port(端口号可以省略，默认8080)
-//  eg: node start.js 999
+//  node start.js 端口 文件名(端口号可以省略，默认8080)
+//  eg: node start.js
+//  eg: node start.js 端口
+//  eg: node start.js 文件名
+//  eg: node start.js 端口 文件名
+//  eg: node start.js 文件名 端口
+//  eg: node start.js www.baidu.com   
 //  服务启动后，当前目录为根目录
 //  Author:Liubei  E-mail:liubei528@gmail.com
 var http = require('http');
@@ -14,14 +20,37 @@ var path = require('path');
 var config = {
     denyAccess: [],
     localIPs: ['127.0.0.1'],
-    srcpath: '/src'
+    srcpath: '/src',
+    port : 8080
 };
 var os = require('os');
 var IP = '';
 var URL = '';
+var URLQcode = '';
+var regNumber = /^[0-9]*$/;
+var regPageName = /\.html|\.htm/;
+var regRemoteUrl = /http:\/\/|www\.|m\.|\.com|\.net|\.org|\.me|\.cn/;
+var regHttp = /http:\/\//;
+var PageName = 'index.html';   //  设置默认打开二维码网页文件名
 
 process.argv.forEach(function () {
-  config.port = arguments[2][2] || 8080;
+    var paramsArr = [];
+    if( arguments[2].length > 2){
+        paramsArr = arguments[2];
+        for(var i = 2; i < paramsArr.length; i++){
+            if( regNumber.test(paramsArr[i]) ){
+                config.port = parseInt(paramsArr[i]);
+            }else{
+                if( regRemoteUrl.test(paramsArr[i]) ){
+                    PageName = paramsArr[i] = (regHttp.test(paramsArr[i]) ? paramsArr[i] : ('http://' + paramsArr[i]) );
+                }else if( regPageName.test(paramsArr[i]) ){
+                    PageName = paramsArr[i];
+                }else{
+                    PageName = paramsArr[i] + '.html';
+                }
+            }
+        }
+    }
 });
 
 
@@ -80,7 +109,8 @@ function getLocalIP() {
 }
 getLocalIP();
 URL = "http://"+IP+":"+config.port;
-console.log( "open http://"+IP+":"+config.port);
+console.log( "open " + URL);
+URLQcode = (regHttp.test(PageName) ? PageName : (URL + '/' + PageName) );
 
 //路由URL
 function processRequestRoute(request, response) {
@@ -146,7 +176,7 @@ function processRequestRoute(request, response) {
             response.writeHead(404, { 'Content-Type': 'text/plain' });
             if (pathname === '/') {
                 response.writeHead(200, { "Content-Type": "text/html" });
-                response.end("<html><meta charset='utf-8'><title>扫描二维码</title></html><div style='text-align:center;margin-top:100px;'><p><a target='_blank' href='"+URL+"/index.html'>"+URL+"/index.html</a></p><p><img src='http://trans.2sitebbs.com/qr/?w=100&h=100&str="+URL+"/index.html'/></p></div></html>");
+                response.end("<html><meta charset='utf-8'><title>扫描二维码</title></html><div style='text-align:center;margin-top:100px;'><p><a target='_blank' href='"+URLQcode+"'>"+URLQcode+"</a></p><p><img src='http://trans.2sitebbs.com/qr/?w=100&h=100&str="+URLQcode+"'/></p></div></html>");
             }
         }
     });
