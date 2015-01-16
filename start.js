@@ -1,4 +1,4 @@
-﻿//  webserver-node v-0.0.2
+﻿//  webserver-node v-0.0.3
 //  功能：搭建本地web服务，自动生成二维码，便于手机站测试
 //  require:安装node.js(官网地址：http://www.nodejs.org/)
 //  启动服务命令：
@@ -10,7 +10,7 @@
 //  eg: node start.js 文件名 端口
 //  eg: node start.js www.baidu.com   
 //  服务启动后，当前目录为根目录
-//  Author:Liubei  E-mail:liubei528@gmail.com
+//  Author:Liubei  E-mail:liubei@liubeismx.cn
 var http = require('http');
 var url = require('url');
 var fs = require('fs');
@@ -20,7 +20,7 @@ var path = require('path');
 var config = {
     denyAccess: [],
     localIPs: ['127.0.0.1'],
-    srcpath: '/src',
+    srcpath: '/nodejs',
     port : 8080
 };
 var os = require('os');
@@ -31,6 +31,8 @@ var regNumber = /^[0-9]*$/;
 var regPageName = /\.html|\.htm/;
 var regRemoteUrl = /http:\/\/|www\.|m\.|\.com|\.net|\.org|\.me|\.cn/;
 var regHttp = /http:\/\//;
+var regIp = /^(\d{1,3}\.){3}\d{1,3}$/;
+var typeIp = '本地连接';
 var PageName = 'index.html';   //  设置默认打开二维码网页文件名
 
 process.argv.forEach(function () {
@@ -57,58 +59,21 @@ process.argv.forEach(function () {
 //开始HTTP服务器
 http.createServer(processRequestRoute).listen(config.port);
 function getLocalIP() {
-    var map = [];
-    var once = true;
-    var ifaces = os.networkInterfaces();
-
-    for (var dev in ifaces) {
-
-        if( once && ifaces[dev][1] ){
-            IP = ifaces[dev][1].address;
-            once = false;
-        }
-        if (dev.indexOf('eth0') != -1) {
-            var tokens = dev.split(':');
-            var dev2 = null;
-            if (tokens.length == 2) {
-                dev2 = 'eth1:' + tokens[1];
-            } else if (tokens.length == 1) {
-                dev2 = 'eth1';
-            }
-            if (null == ifaces[dev2]) {
-                continue;
-            }
-            IP = ifaces[dev];
-            // 找到eth0和eth1分别的ip
-            var ip = null, ip2 = null;
-            ifaces[dev].forEach(function(details) {
-                if (details.family == 'IPv4') {
-                    ip = details.address;
-                }
-            });
-            ifaces[dev2].forEach(function(details) {
-                if (details.family == 'IPv4') {
-                    ip2 = details.address;
-                }
-            });
-            if (null == ip || null == ip2) {
-                continue;
-            }
-
-            // 将记录添加到map中去
-            if (ip.indexOf('10.') == 0 ||
-                ip.indexOf('172.') == 0 ||
-                ip.indexOf('192.') == 0) {
-                map.push({"intranet_ip" : ip, "internet_ip" : ip2});
-            } else {
-                map.push({"intranet_ip" : ip2, "internet_ip" : ip});
+    var ip, ifaces = os.networkInterfaces();
+    if( ifaces[typeIp] ){
+        var ipTempArr = ifaces[typeIp];
+        for(var i = 0; i < ipTempArr.length; i++){
+            var ipObj = ipTempArr[i];
+            if( ipObj.address && regIp.test(ipObj.address) ){
+                ip = ipObj.address;
+                break;
             }
         }
-    } 
-    return map;
+    }
+    return ip;
 }
-getLocalIP();
-URL = "http://"+IP+":"+config.port;
+IP = getLocalIP();
+URL = "http://"+IP+':'+config.port;
 console.log( "open " + URL);
 URLQcode = (regHttp.test(PageName) ? PageName : (URL + '/' + PageName) );
 
