@@ -32,7 +32,8 @@ var regPageName = /\.html|\.htm/;
 var regRemoteUrl = /http:\/\/|www\.|m\.|\.com|\.net|\.org|\.me|\.cn/;
 var regHttp = /http:\/\//;
 var regIp = /^(\d{1,3}\.){3}\d{1,3}$/;
-var typeIp = '本地连接';
+//  win本地地址，mac本地地址，ubuntu外网地址
+var typeIps = ['本地连接','en0','eth1'];
 var PageName = 'index.html';   //  设置默认打开二维码网页文件名
 
 process.argv.forEach(function () {
@@ -60,14 +61,20 @@ process.argv.forEach(function () {
 http.createServer(processRequestRoute).listen(config.port);
 function getLocalIP() {
     var ip, ifaces = os.networkInterfaces();
-    if( ifaces[typeIp] ){
-        var ipTempArr = ifaces[typeIp];
-        for(var i = 0; i < ipTempArr.length; i++){
-            var ipObj = ipTempArr[i];
-            if( ipObj.address && regIp.test(ipObj.address) ){
-                ip = ipObj.address;
+    if( typeIps.length){
+        for(var j = 0; j <typeIps.length; j++){
+            var typeIp = typeIps[j];
+            if(ifaces[typeIp]){
+                var ipTempArr = ifaces[typeIp];
                 break;
             }
+        }
+    }
+    for(var i = 0; i < ipTempArr.length; i++){
+        var ipObj = ipTempArr[i];
+        if( ipObj.address && regIp.test(ipObj.address) ){
+            ip = ipObj.address;
+            break;
         }
     }
     return ip;
