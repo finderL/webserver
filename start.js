@@ -46,7 +46,7 @@ process.argv.forEach(function () {
             }else{
                 if( regRemoteUrl.test(paramsArr[i]) ){
                     PageName = paramsArr[i] = (regHttp.test(paramsArr[i]) ? paramsArr[i] : ('http://' + paramsArr[i]) );
-                }else if( regPageName.test(paramsArr[i]) ){
+                }else if( paramsArr[i].split('.').length > 1 ){
                     PageName = paramsArr[i];
                 }else{
                     PageName = paramsArr[i] + '.html';
@@ -167,25 +167,40 @@ function staticResHandler(localPath, ext, response) {
     });
 }
 
+function isFlash(ext){
+    var movies = ['wmv','asf','rm','rmvb','mov','avi','dat','mpg','mpeg'], flag = false;
+    for(var i = 0; i < movies.length; i++){
+        if(ext === movies[i]){
+            flag = true;
+            break;
+        }
+    }
+    return flag;
+}
 //得到ContentType
 function getContentTypeByExt(ext) {
     ext = ext.toLowerCase();
-    if (ext === '.htm' || ext === '.html')
+    if (ext === '.htm' || ext === '.html'){
         return 'text/html';
-    else if (ext === '.js')
+    }else if (ext === '.js'){
         return 'application/x-javascript';
-    else if (ext === '.css')
+    }else if (ext === '.css'){
         return 'text/css';
-    else if (ext === '.jpe' || ext === '.jpeg' || ext === '.jpg')
+    }else if (ext === '.jpe' || ext === '.jpeg' || ext === '.jpg'){
         return 'image/jpeg';
-    else if (ext === '.png')
+    }else if (ext === '.png'){
         return 'image/png';
-    else if (ext === '.ico')
+    }else if (ext === '.ico'){
         return 'image/x-icon';
-    else if (ext === '.zip')
+    }else if (ext === '.zip'){
         return 'application/zip';
-    else if (ext === '.doc')
+    }else if (ext === '.doc'){
         return 'application/msword';
-    else
+    }else if (isFlash(ext)){
+        return "application/x-shockwave-flash";
+    }else{
         return 'text/plain';
+    }
 }
+
+
