@@ -1,7 +1,7 @@
 ﻿//  webserver-node v-0.0.3
 //  功能：搭建本地web服务，自动生成二维码，便于手机站测试
 //  require:安装node.js(官网地址：http://www.nodejs.org/)
-//  启动服务命令：
+//  启动服务命令(默认为内网地址，外网加'-e')：
 //  node start.js 端口 文件名(端口号可以省略，默认8080)
 //  eg: node start.js
 //  eg: node start.js 端口
@@ -25,17 +25,25 @@ var config = {
 };
 var os = require('os');
 var IP = '';
+var defaultIP = config.localIPs[0];
 var URL = '';
 var URLQcode = '';
 var regNumber = /^[0-9]*$/;
 var regPageName = /\.html|\.htm/;
+var regInternet = /^-e$/;
 var regRemoteUrl = /http:\/\/|www\.|m\.|\.com|\.net|\.org|\.me|\.cn/;
 var regHttp = /http:\/\//;
-var regIp = /^(\d{1,3}\.){3}\d{1,3}$/;
+var regIp = /192\.168\.[0-9]{1,3}\.[0-9]{1,3}/;
 //  win本地地址，mac本地地址，ubuntu外网地址
 var typeIps = ['本地连接','en0','eth1'];
 var PageName = 'index.html';   //  设置默认打开二维码网页文件名
+var isArray = function(obj) {
+    return Object.prototype.toString.call(obj) === '[object Array]';
+}
 
+function validateLocalIp (ip) {
+    return regIp.test(ip);
+}
 process.argv.forEach(function () {
     var paramsArr = [];
     if( arguments[2].length > 2){
@@ -46,8 +54,12 @@ process.argv.forEach(function () {
             }else{
                 if( regRemoteUrl.test(paramsArr[i]) ){
                     PageName = paramsArr[i] = (regHttp.test(paramsArr[i]) ? paramsArr[i] : ('http://' + paramsArr[i]) );
-                }else if( paramsArr[i].split('.').length > 1 ){
+                }else if( regPageName.test(paramsArr[i]) ){
                     PageName = paramsArr[i];
+                }else if(regInternet.test(paramsArr[i])){
+                    validateLocalIp = function(ip) {
+                        return !regIp.test(ip);
+                    };
                 }else{
                     PageName = paramsArr[i] + '.html';
                 }
@@ -60,24 +72,18 @@ process.argv.forEach(function () {
 //开始HTTP服务器
 http.createServer(processRequestRoute).listen(config.port);
 function getLocalIP() {
-    var ip, ifaces = os.networkInterfaces();
-    if( typeIps.length){
-        for(var j = 0; j <typeIps.length; j++){
-            var typeIp = typeIps[j];
-            if(ifaces[typeIp]){
-                var ipTempArr = ifaces[typeIp];
-                break;
+    var ip, ifaces = os.networkInterfaces(), pass = true;
+    for (var dev in ifaces) {
+        var ipTemp = ifaces[dev];
+        for(var i = 0; i < ipTemp.length; i++ ){
+            if (ipTemp[i].family=='IPv4' && validateLocalIp(ipTemp[i].address) && pass ) {  
+                console.log(ipTemp[i].address, validateLocalIp(ipTemp[i].address));
+                ip = ipTemp[i].address;
+                pass = false;
             }
         }
     }
-    for(var i = 0; i < ipTempArr.length; i++){
-        var ipObj = ipTempArr[i];
-        if( ipObj.address && regIp.test(ipObj.address) ){
-            ip = ipObj.address;
-            break;
-        }
-    }
-    return ip;
+    return ip == undefined ? defaultIP : ip;
 }
 IP = getLocalIP();
 URL = "http://"+IP+':'+config.port;
@@ -167,40 +173,25 @@ function staticResHandler(localPath, ext, response) {
     });
 }
 
-function isFlash(ext){
-    var movies = ['wmv','asf','rm','rmvb','mov','avi','dat','mpg','mpeg'], flag = false;
-    for(var i = 0; i < movies.length; i++){
-        if(ext === movies[i]){
-            flag = true;
-            break;
-        }
-    }
-    return flag;
-}
 //得到ContentType
 function getContentTypeByExt(ext) {
     ext = ext.toLowerCase();
-    if (ext === '.htm' || ext === '.html'){
+    if (ext === '.htm' || ext === '.html')
         return 'text/html';
-    }else if (ext === '.js'){
+    else if (ext === '.js')
         return 'application/x-javascript';
-    }else if (ext === '.css'){
+    else if (ext === '.css')
         return 'text/css';
-    }else if (ext === '.jpe' || ext === '.jpeg' || ext === '.jpg'){
+    else if (ext === '.jpe' || ext === '.jpeg' || ext === '.jpg')
         return 'image/jpeg';
-    }else if (ext === '.png'){
+    else if (ext === '.png')
         return 'image/png';
-    }else if (ext === '.ico'){
+    else if (ext === '.ico')
         return 'image/x-icon';
-    }else if (ext === '.zip'){
+    else if (ext === '.zip')
         return 'application/zip';
-    }else if (ext === '.doc'){
+    else if (ext === '.doc')
         return 'application/msword';
-    }else if (isFlash(ext)){
-        return "application/x-shockwave-flash";
-    }else{
+    else
         return 'text/plain';
-    }
 }
-
-
