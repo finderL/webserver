@@ -34,12 +34,7 @@ var regInternet = /^-e$/;
 var regRemoteUrl = /http:\/\/|www\.|m\.|\.com|\.net|\.org|\.me|\.cn/;
 var regHttp = /http:\/\//;
 var regIp = /192\.168\.[0-9]{1,3}\.[0-9]{1,3}/;
-//  win本地地址，mac本地地址，ubuntu外网地址
-var typeIps = ['本地连接','en0','eth1'];
 var PageName = 'index.html';   //  设置默认打开二维码网页文件名
-var isArray = function(obj) {
-    return Object.prototype.toString.call(obj) === '[object Array]';
-}
 
 function validateLocalIp (ip) {
     return regIp.test(ip);
@@ -76,8 +71,7 @@ function getLocalIP() {
     for (var dev in ifaces) {
         var ipTemp = ifaces[dev];
         for(var i = 0; i < ipTemp.length; i++ ){
-            if (ipTemp[i].family=='IPv4' && validateLocalIp(ipTemp[i].address) && pass ) {  
-                console.log(ipTemp[i].address, validateLocalIp(ipTemp[i].address));
+            if (ipTemp[i].family=='IPv4' && validateLocalIp(ipTemp[i].address) && pass ) {
                 ip = ipTemp[i].address;
                 pass = false;
             }
