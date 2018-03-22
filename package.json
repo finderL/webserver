@@ -1,0 +1,22 @@
+{
+  "name": "webserver",
+  "version": "1.0.0",
+  "description": "",
+  "main": "start.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/finderL/webserver.git"
+  },
+  "keywords": [
+    "webserver"
+  ],
+  "author": "liubei528@gmail.com",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/finderL/webserver/issues"
+  },
+  "homepage": "https://github.com/finderL/webserver#readme"
+}
